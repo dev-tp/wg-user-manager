@@ -31,8 +31,8 @@ PrivateKey = $private_key
 
 [Peer]
 AllowedIPs = 0.0.0.0/1, 128.0.0.0/1
-Endpoint = office.countrywidetriallawyers.com:51820
-PublicKey = GzQYjKqA0bsyCC6e3N8zz2kShGMsLP9SHZgWz4ezgwM=
+Endpoint = $ENDPOINT
+PublicKey = $PUBLIC_KEY
 EOF
 
   zip config.zip CTL.conf
@@ -64,6 +64,13 @@ function list {
 function print {
   echo 'print'
 }
+
+if [ -f .env ]; then
+  export $(cat .env | xargs)
+else
+  echo 'Please create .env file first.'
+  exit
+fi
 
 create
 list
