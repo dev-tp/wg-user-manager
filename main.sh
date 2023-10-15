@@ -2,7 +2,15 @@
 
 function create {
   if [ ! -f wg.db ]; then
-    sqlite3 -line wg.db 'CREATE TABLE user (id INTEGER PRIMARY KEY AUTOINCREMENT, profile TEXT, address TEXT, public_key TEXT, private_key TEXT);'
+sqlite3 wg.db << EOF
+CREATE TABLE user (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile TEXT,
+  address TEXT,
+  private_key TEXT,
+  public_key TEXT
+);
+EOF
   fi
 
   wg genkey | tee private.key | wg pubkey > public.key
@@ -35,7 +43,10 @@ EOF
   # mkdir -p "$profile"
   # mv config.zip "$profile"
 
-  sqlite3 -line wg.db "INSERT INTO user (profile, address, public_key, private_key) VALUES ('$profile', '$address', '$public_key', '$private_key');"
+sqlite3 wg.db << EOF
+INSERT INTO user (profile, address, private_key, public_key)
+VALUES ('$profile', '$address', '$private_key', '$public_key');
+EOF
 
   rm *.key
 }
