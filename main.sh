@@ -90,7 +90,19 @@ EOF
 }
 
 function list {
-  sqlite3 -header -column wg.db 'SELECT id, profile, public_key FROM user WHERE deleted IS NULL'
+  sqlite3 -header -column wg.db <<EOF
+SELECT
+  id,
+  address,
+  profile,
+  public_key
+FROM
+  user
+WHERE
+  deleted IS NULL
+ORDER BY
+  address DESC
+EOF
 }
 
 function print {
@@ -104,7 +116,7 @@ PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -
 
 EOF
 
-  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL' | {
+  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL ORDER BY address DESC' | {
     while IFS='|' read -ra row; do
       echo "# ${row[0]}"
       echo '[Peer]'
@@ -127,7 +139,7 @@ if [ ! -f wg.db ]; then
 CREATE TABLE user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   profile TEXT,
-  address TEXT,
+  address INTEGER,
   private_key TEXT,
   public_key TEXT,
   added INTEGER DEFAULT CURRENT_TIMESTAMP,
