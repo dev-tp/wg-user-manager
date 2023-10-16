@@ -60,9 +60,26 @@ function list {
   sqlite3 -line wg.db 'SELECT * FROM user;'
 }
 
-# TODO Print generated wg0.conf file
 function print {
-  echo 'print'
+cat << EOF
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = 51820
+PrivateKey = $PRIVATE_KEY
+PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eno1 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eno1 -j MASQUERADE
+
+EOF
+
+  sqlite3 wg.db 'SELECT profile, address, public_key FROM user' | {
+    while IFS='|' read -ra row; do
+      echo "# ${row[0]}"
+      echo '[Peer]'
+      echo "Address = ${row[1]}/32"
+      echo "PublicKey = ${row[2]}"
+      echo
+    done
+  }
 }
 
 if [ -f .env ]; then
@@ -74,3 +91,4 @@ fi
 
 create
 list
+print
