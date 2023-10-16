@@ -8,7 +8,9 @@ CREATE TABLE user (
   profile TEXT,
   address TEXT,
   private_key TEXT,
-  public_key TEXT
+  public_key TEXT,
+  added INTEGER DEFAULT CURRENT_TIMESTAMP,
+  deleted INTEGER
 );
 EOF
   fi
@@ -48,13 +50,18 @@ EOF
   rm *.key
 }
 
-# TODO Delete profile
 function delete {
-  echo 'delete'
+  list
+
+  read -p 'Enter the id you want to delete: ' id
+
+  if [[ $id =~ ^[0-9]+$ ]]; then
+    sqlite3 wg.db "UPDATE user SET deleted = CURRENT_TIMESTAMP WHERE id = $id"
+  fi
 }
 
 function list {
-  sqlite3 -line wg.db 'SELECT * FROM user;'
+  sqlite3 -header -column wg.db 'SELECT id, profile, public_key FROM user WHERE deleted IS NULL'
 }
 
 function print {
@@ -68,7 +75,7 @@ PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -
 
 EOF
 
-  sqlite3 wg.db 'SELECT profile, address, public_key FROM user' | {
+  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL' | {
     while IFS='|' read -ra row; do
       echo "# ${row[0]}"
       echo '[Peer]'
@@ -89,3 +96,4 @@ fi
 create
 list
 print
+delete
