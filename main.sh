@@ -60,6 +60,55 @@ function delete {
   fi
 }
 
+function edit {
+  list
+
+  read -p 'Enter the id you want to edit: ' id
+
+  if [[ $id =~ ^[0-9]+$ ]]; then
+    sqlite3 wg.db "SELECT profile, address FROM user WHERE id = $id" | {
+      while IFS='|' read -ra row; do
+        read -p "Enter profile [${row[0]}]: " profile < /dev/tty
+
+        if [ -z "$profile" ]; then
+          profile=${row[0]}
+        fi
+
+        read -p "Enter address [${row[1]}]: " address < /dev/tty
+
+        if [ -z "$address" ]; then
+          address=${row[1]}
+        fi
+
+        read -p 'Would you like to regenerate key pair? [y/N] ' regenerate < /dev/tty
+
+        if [[ "$regenerate" != 'y' ]]; then
+          sqlite3 wg.db "UPDATE user SET profile = '$profile', address = '$address' WHERE id = $id"
+        else
+          wg genkey | tee private.key | wg pubkey > public.key
+
+          private_key=$(cat private.key)
+          public_key=$(cat public.key)
+
+          rm *.key
+
+sqlite3 wg.db << EOF
+UPDATE
+  user
+SET
+  profile = '$profile',
+  address = '$address',
+  private_key = '$private_key',
+  public_key = '$public_key'
+WHERE
+  id = $id;
+EOF
+        fi
+      done
+    }
+  fi
+}
+
 function list {
   sqlite3 -header -column wg.db 'SELECT id, profile, public_key FROM user WHERE deleted IS NULL'
 }
@@ -97,3 +146,4 @@ create
 list
 print
 delete
+edit
