@@ -53,6 +53,7 @@ EOF
 function delete {
   list
 
+  echo
   read -p 'Enter the id you want to delete: ' id
 
   if [[ $id =~ ^[0-9]+$ ]]; then
@@ -63,6 +64,7 @@ function delete {
 function edit {
   list
 
+  echo
   read -p 'Enter the id you want to edit: ' id
 
   if [[ $id =~ ^[0-9]+$ ]]; then
@@ -142,8 +144,26 @@ else
   exit
 fi
 
-create
-list
-print
-delete
-edit
+echo 'WireGuard User Manager'
+
+while true; do
+  echo
+  echo 'c. create'
+  echo 'd. delete'
+  echo 'e. edit'
+  echo 'l. list'
+  echo 'p. print'
+  echo 'q. quit'
+  echo
+
+  read -p '>>> ' option
+
+  case $option in
+  c) create ;;
+  d) delete ;;
+  e) edit ;;
+  l) list ;;
+  p) print ;;
+  q) exit ;;
+  esac
+done
