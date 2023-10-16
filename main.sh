@@ -20,6 +20,8 @@ EOF
   private_key=$(cat private.key)
   public_key=$(cat public.key)
 
+  rm *.key
+
   read -p 'Who is going to use this connection? ' profile
   read -p 'What address will be assigned (e.g. 10.0.0.x)? ' address
 
@@ -46,8 +48,6 @@ sqlite3 wg.db << EOF
 INSERT INTO user (profile, address, private_key, public_key)
 VALUES ('$profile', '$address', '$private_key', '$public_key');
 EOF
-
-  rm *.key
 }
 
 function delete {
