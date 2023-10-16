@@ -1,12 +1,8 @@
 #!/bin/bash
 
 function create {
-  wg genkey | tee private.key | wg pubkey >public.key
-
-  private_key=$(cat private.key)
-  public_key=$(cat public.key)
-
-  rm *.key
+  local private_key=$(wg genkey)
+  local public_key=$(echo $private_key | wg pubkey)
 
   read -p 'Who is going to use this connection? ' profile
   read -p 'What address will be assigned (e.g. 10.0.0.x)? ' address
@@ -73,12 +69,8 @@ function edit {
         if [[ "$regenerate" != 'y' ]]; then
           sqlite3 wg.db "UPDATE user SET profile = '$profile', address = '$address' WHERE id = $id"
         else
-          wg genkey | tee private.key | wg pubkey >public.key
-
-          private_key=$(cat private.key)
-          public_key=$(cat public.key)
-
-          rm *.key
+          local private_key=$(wg genkey)
+          local public_key=$(echo $private_key | wg pubkey)
 
           sqlite3 wg.db <<EOF
 UPDATE
