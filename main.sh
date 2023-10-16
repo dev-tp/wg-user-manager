@@ -1,20 +1,6 @@
 #!/bin/bash
 
 function create {
-  if [ ! -f wg.db ]; then
-    sqlite3 wg.db <<EOF
-CREATE TABLE user (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  profile TEXT,
-  address TEXT,
-  private_key TEXT,
-  public_key TEXT,
-  added INTEGER DEFAULT CURRENT_TIMESTAMP,
-  deleted INTEGER
-);
-EOF
-  fi
-
   wg genkey | tee private.key | wg pubkey >public.key
 
   private_key=$(cat private.key)
@@ -142,6 +128,20 @@ if [ -f .env ]; then
 else
   echo 'Please create .env file first.'
   exit
+fi
+
+if [ ! -f wg.db ]; then
+  sqlite3 wg.db <<EOF
+CREATE TABLE user (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile TEXT,
+  address TEXT,
+  private_key TEXT,
+  public_key TEXT,
+  added INTEGER DEFAULT CURRENT_TIMESTAMP,
+  deleted INTEGER
+);
+EOF
 fi
 
 echo 'WireGuard User Manager'
