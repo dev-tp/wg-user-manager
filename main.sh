@@ -117,7 +117,7 @@ FROM
 WHERE
   deleted IS NULL
 ORDER BY
-  address DESC
+  CAST(SUBSTR(address, 8) AS INTEGER) ASC
 EOF
 }
 
@@ -132,7 +132,7 @@ PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -
 
 EOF
 
-  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL ORDER BY address DESC' |
+  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL ORDER BY CAST(SUBSTR(address, 8) AS INTEGER) ASC' |
     while IFS='|' read -ra record; do
       echo "# ${record[0]}"
       echo '[Peer]'
@@ -154,7 +154,7 @@ if [ ! -f wg.db ]; then
 CREATE TABLE user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   profile TEXT,
-  address INTEGER,
+  address TEXT,
   private_key TEXT,
   public_key TEXT,
   added INTEGER DEFAULT CURRENT_TIMESTAMP,
