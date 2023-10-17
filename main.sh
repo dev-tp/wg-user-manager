@@ -34,18 +34,18 @@ function edit {
   read -p 'Enter the id you want to edit: ' id
 
   if [[ $id =~ ^[0-9]+$ ]]; then
-    sqlite3 wg.db "SELECT profile, address FROM user WHERE id = $id" | {
-      while IFS='|' read -ra row; do
-        read -p "Enter profile [${row[0]}]: " profile </dev/tty
+    sqlite3 wg.db "SELECT profile, address FROM user WHERE id = $id" |
+      while IFS='|' read -ra record; do
+        read -p "Enter profile [${record[0]}]: " profile </dev/tty
 
         if [ -z "$profile" ]; then
-          profile=${row[0]}
+          profile=${record[0]}
         fi
 
-        read -p "Enter address [${row[1]}]: " address </dev/tty
+        read -p "Enter address [${record[1]}]: " address </dev/tty
 
         if [ -z "$address" ]; then
-          address=${row[1]}
+          address=${record[1]}
         fi
 
         read -p 'Would you like to regenerate key pair? [y/N] ' regenerate </dev/tty
@@ -69,7 +69,6 @@ WHERE
 EOF
         fi
       done
-    }
   fi
 }
 
@@ -80,14 +79,13 @@ function generate {
   read -p 'Enter id to generate config file: ' id
 
   if [[ $id =~ ^[0-9]+$ ]]; then
-    sqlite3 wg.db "SELECT address, private_key FROM user WHERE id = $id" | {
-      while IFS='|' read -ra row; do
-        local address=${row[0]}
-        local private_key=${row[1]}
+    sqlite3 wg.db "SELECT address, private_key FROM user WHERE id = $id" |
+      while IFS='|' read -ra record; do
+        local address=${record[0]}
+        local private_key=${record[1]}
 
         generate_config_file
       done
-    }
   fi
 }
 
@@ -134,15 +132,14 @@ PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -
 
 EOF
 
-  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL ORDER BY address DESC' | {
-    while IFS='|' read -ra row; do
-      echo "# ${row[0]}"
+  sqlite3 wg.db 'SELECT profile, address, public_key FROM user WHERE deleted IS NULL ORDER BY address DESC' |
+    while IFS='|' read -ra record; do
+      echo "# ${record[0]}"
       echo '[Peer]'
-      echo "Address = ${row[1]}/32"
-      echo "PublicKey = ${row[2]}"
+      echo "Address = ${record[1]}/32"
+      echo "PublicKey = ${record[2]}"
       echo
     done
-  }
 }
 
 if [ -f .env ]; then
