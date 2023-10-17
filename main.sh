@@ -4,27 +4,11 @@ function create {
   local private_key=$(wg genkey)
   local public_key=$(echo $private_key | wg pubkey)
 
+  local address profile
   read -p 'Who is going to use this connection? ' profile
   read -p 'What address will be assigned (e.g. 10.0.0.x)? ' address
 
-  cat <<EOF >$CONFIG_FILE_NAME
-[Interface]
-Address = $address/32
-PrivateKey = $private_key
-
-[Peer]
-AllowedIPs = 0.0.0.0/1, 128.0.0.0/1
-Endpoint = $ENDPOINT
-PublicKey = $PUBLIC_KEY
-EOF
-
-  zip config.zip $CONFIG_FILE_NAME
-  rm $CONFIG_FILE_NAME
-
-  # Perhaps give the option to create a directory whenever multiple users are
-  # added sequentially
-  # mkdir -p "$profile"
-  # mv config.zip "$profile"
+  generate_config_file
 
   sqlite3 wg.db <<EOF
 INSERT INTO user (profile, address, private_key, public_key)
@@ -87,6 +71,40 @@ EOF
       done
     }
   fi
+}
+
+function generate {
+  list
+
+  echo
+  read -p 'Enter id to generate config file: ' id
+
+  if [[ $id =~ ^[0-9]+$ ]]; then
+    sqlite3 wg.db "SELECT address, private_key FROM user WHERE id = $id" | {
+      while IFS='|' read -ra row; do
+        local address=${row[0]}
+        local private_key=${row[1]}
+
+        generate_config_file
+      done
+    }
+  fi
+}
+
+function generate_config_file {
+  cat <<EOF >$CONFIG_FILE_NAME
+[Interface]
+Address = $address/32
+PrivateKey = $private_key
+
+[Peer]
+AllowedIPs = 0.0.0.0/1, 128.0.0.0/1
+Endpoint = $ENDPOINT
+PublicKey = $PUBLIC_KEY
+EOF
+
+  zip config.zip $CONFIG_FILE_NAME
+  rm $CONFIG_FILE_NAME
 }
 
 function list {
@@ -155,6 +173,7 @@ while true; do
   echo 'c. create'
   echo 'd. delete'
   echo 'e. edit'
+  echo 'g. generate'
   echo 'l. list'
   echo 'p. print'
   echo 'q. quit'
@@ -166,6 +185,7 @@ while true; do
   c) create ;;
   d) delete ;;
   e) edit ;;
+  g) generate ;;
   l) list ;;
   p) print ;;
   q) exit ;;
