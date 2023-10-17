@@ -7,7 +7,7 @@ function create {
   read -p 'Who is going to use this connection? ' profile
   read -p 'What address will be assigned (e.g. 10.0.0.x)? ' address
 
-  cat <<EOF >CTL.conf
+  cat <<EOF >$CONFIG_FILE_NAME
 [Interface]
 Address = $address/32
 PrivateKey = $private_key
@@ -18,8 +18,8 @@ Endpoint = $ENDPOINT
 PublicKey = $PUBLIC_KEY
 EOF
 
-  zip config.zip CTL.conf
-  rm CTL.conf
+  zip config.zip $CONFIG_FILE_NAME
+  rm $CONFIG_FILE_NAME
 
   # Perhaps give the option to create a directory whenever multiple users are
   # added sequentially
